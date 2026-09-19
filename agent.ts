@@ -251,7 +251,7 @@ function forwardEndpoint(body: Record<string, unknown>): string {
   return body.input !== undefined ? "/v1/responses" : "/v1/chat/completions";
 }
 
-function decorate(upstream: Response, chosen: Candidate, need: Need, escalations: string[]): Response {
+async function decorate(upstream: Response, chosen: Candidate, need: Need, escalations: string[]): Promise<Response> {
   const trace = {
     tier: need.tier,
     signals: need.signals,
@@ -302,7 +302,7 @@ export default async function agent({ request, pollinations }: AgentContext): Pr
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ ...body, model: candidate.id }),
     });
-    if (res.ok) return decorate(res, candidate, need, escalations);
+    if (res.ok) return await decorate(res, candidate, need, escalations);
     escalations.push(`${candidate.id}:${res.status}`);
     demoted.set(candidate.id, Date.now());
   }
