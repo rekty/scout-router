@@ -2,7 +2,7 @@
 
 A [Pollinations code agent](https://github.com/pollinations/pollinations/blob/main/BUILD_YOUR_OWN_AGENT.md) that routes each request to the best model — **deterministically, with no classifier call**. Most routers spend a nano-model call on every request to guess difficulty; scout-router reads the request shape directly, so routing adds **zero extra latency and zero extra pollen**, and every decision ships an explainable trace.
 
-**Callable model:** `rekty/scout-router` (agent id: _added after deploy_)
+**Callable model:** `rekty/scout-router` (agent id `22a87097-ea6c-41fe-9343-b828e45ce112`)
 
 ## How it routes
 
@@ -35,7 +35,11 @@ curl https://gen.pollinations.ai/v1/chat/completions \
   -d '{"model": "rekty/scout-router", "messages": [{"role": "user", "content": "Hi"}]}'
 ```
 
-Then inspect the `x-scout-*` response headers.
+Then inspect the `scout_trace` field in the JSON response. **Note:** the trace rides in the response body on `/v1/responses` — the gateway strips custom headers and unknown fields from `/v1/chat/completions` responses, so `/v1/responses` is the verifiable path.
+
+## Agent-model safety
+
+Managed agent models (other people's agents, including routers) are excluded from the candidate pool: they publish no token pricing (so cost-ranking treats them as free) and routing into another router would recurse. Models with no token pricing at all are excluded for the same reason.
 
 ## Layout
 
