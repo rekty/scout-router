@@ -267,6 +267,16 @@ function decorate(upstream: Response, chosen: Candidate, need: Need, escalations
   headers.set("x-scout-tier", need.tier);
   headers.set("x-scout-reason", reasonFor(chosen, need));
   headers.set("x-scout-trace", JSON.stringify(trace));
+  // Gateways strip custom headers, so also embed the trace in JSON bodies.
+  if ((upstream.headers.get("content-type") ?? "").includes("json")) {
+    const text = await upstream.text();
+    try {
+      const json = JSON.parse(text) as object;
+      return new Response(JSON.stringify({ ...json, scout_trace: trace }), { status: upstream.status, statusText: upstream.statusText, headers });
+    } catch {
+      return new Response(text, { status: upstream.status, statusText: upstream.statusText, headers });
+    }
+  }
   return new Response(upstream.body, { status: upstream.status, statusText: upstream.statusText, headers });
 }
 
