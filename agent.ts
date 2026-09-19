@@ -191,6 +191,8 @@ export function pickCandidates(catalog: Catalog, need: Need, self: string = SELF
   for (const m of catalog.models) {
     if (m.category !== undefined && m.category !== "text") continue;
     if (!m.id || m.id.includes(self)) continue;
+    if (m.id.startsWith("community/")) continue; // other agents — routing into a router recurses
+    if (!(price(m, "promptTextTokens") > 0 || price(m, "completionTextTokens") > 0)) continue; // no token pricing -> cannot cost-rank
     if (!(m.supported_endpoints ?? []).some((e) => e === "/v1/responses")) continue;
     const inMods = (m.input_modalities ?? ["text"]).map((x) => x.toLowerCase());
     const outMods = (m.output_modalities ?? ["text"]).map((x) => x.toLowerCase());

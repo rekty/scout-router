@@ -42,6 +42,28 @@ const MODEL_CATALOG: ModelInfo[] = [
     health: { success_rate: 99.0, requests: 500 },
   },
   {
+    id: "community/someone/other-router",
+    category: "text",
+    community: true,
+    input_modalities: ["text"],
+    output_modalities: ["text"],
+    supported_endpoints: ["/v1/responses"],
+    pricing: { currency: "pollen" }, // agent models publish no token rates
+    capabilities: [],
+    context_length: 128_000,
+  },
+  {
+    id: "nolisting/noprice",
+    category: "text",
+    community: false,
+    input_modalities: ["text"],
+    output_modalities: ["text"],
+    supported_endpoints: ["/v1/responses"],
+    pricing: { currency: "pollen" },
+    capabilities: [],
+    context_length: 128_000,
+  },
+  {
     id: "sick/broken",
     category: "text",
     community: false,
@@ -120,6 +142,13 @@ test("pickCandidates: EASY prefers cheapest healthy; broken model gated out", ()
   const candidates = pickCandidates(catalog, readNeed({ input: "hi" }));
   assert.equal(candidates[0].id, "cheap/mini");
   assert.ok(candidates.every((c) => c.id !== "sick/broken"));
+});
+
+test("pickCandidates: excludes other agents and models without token pricing", () => {
+  const catalog = catalogFixture();
+  const candidates = pickCandidates(catalog, readNeed({ input: "hi" }));
+  assert.ok(candidates.every((c) => !c.id.startsWith("community/")));
+  assert.ok(candidates.every((c) => c.id !== "nolisting/noprice"));
 });
 
 test("pickCandidates: HARD picks the priciest capable model", () => {
